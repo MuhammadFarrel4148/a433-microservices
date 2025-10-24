@@ -1,0 +1,31 @@
+# Version schema docker compose 
+version: "3.7"
+
+# Melakukan definisi service
+services: 
+  # Melakukan definisi service item-app
+  item-app:
+    # Pengambilan image latest dari GitHub Container Registry
+    image: ghcr.io/muhammadfarrel4148/item-app:latest
+    # Melakukan mapping port dari port 80 (host) ke 8080 (container)
+    ports: 
+      - 80:8080
+    # Memastikan item-app berjalan setelah item-db
+    depends_on:
+      - item-db
+    # Menerapkan policy restart ketika container terhenti
+    restart: unless-stopped
+
+  # Melakukan definisi service item-db
+  item-db:
+    # Melakukan pengambilan image dari Docker Hub
+    image: mongo:3
+    # Menggunakan volume app-db
+    volumes:
+      - app-db:/data/db
+    # Menerapkan policy restart ketika container terhenti
+    restart: unless-stopped
+
+# Mendefinisikan volume bernama app-db
+volumes:
+  app-db:

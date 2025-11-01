@@ -3,15 +3,11 @@ version: 2.1
 orbs:
   go: circleci/go@1.8.0        
   docker: circleci/docker@2.6.0   
-  hadolint: circleci/hadolint@2.3.0 
 
 jobs:
   lint-dockerfile:
-    executor: hadolint/hadolint
-    steps:
-      - checkout 
-      - hadolint/lint:
-          dockerfile: Dockerfile 
+    docker/hadolint:
+      dockerfile: Dockerfile
 
   test-app:
     executor: cimg/go:1.21

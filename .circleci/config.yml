@@ -1,0 +1,59 @@
+version: 2.1
+
+orbs:
+  go: circleci/go@1.8.0        
+  docker: circleci/docker@2.6.0   
+  hadolint: circleci/hadolint@2.3.0 
+
+jobs:
+  lint-dockerfile:
+    executor: hadolint/hadolint
+    steps:
+      - checkout 
+      - hadolint/lint:
+          dockerfile: Dockerfile 
+
+  test-app:
+    executor: cimg/go:1.21
+    steps:
+      - checkout
+      - go/load-cache     
+      - go/mod-download   
+      - go/save-cache     
+      - run:
+          name: Menjalankan Unit Test
+          command: go test -v -short --count=1 $(go list ./...)
+
+  build-app-karsajobs:
+    executor: docker/default
+    steps:
+      - checkout
+      - setup_remote_docker: 
+          version: 20.10.24
+      - run:
+          name: Login ke GitHub Container Registry (ghcr.io)
+          command: echo $GHCR_TOKEN | docker login ghcr.io -u $GHCR_USERNAME --password-stdin
+      - docker/build-and-push:
+          repo: ghcr.io/${GHCR_USERNAME}/karsajobs
+          tag: latest 
+
+workflows:
+  version: 2
+  ci-pipeline:
+    jobs:
+      - lint-dockerfile:
+          filters:
+            branches:
+              only: [ "karsajobs" ] 
+      - test-app:
+          filters:
+            branches:
+              only: [ "karsajobs" ]
+
+      - build-app-karsajobs:
+          requires:
+            - lint-dockerfile
+            - test-app
+          filters:
+            branches:
+              only: [ "karsajobs" ]
